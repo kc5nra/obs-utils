@@ -58,12 +58,12 @@ def gen_commit(branch):
 
 def obs_build(arch, build_def):
     build_cmd = [
-        'msbuild OBS-All.sln /m /t:Clean,Build',
+        'msbuild OBS-All.sln /m /t:Clean;Build',
         '/p:Configuration=Release;Platform={0}',
         '/p:DynamicDefines="{1}"'
     ]
 
-    if not os.system(' '.join(build_cmd).format(arch, build_def)):
+    if os.system(' '.join(build_cmd).format(arch, build_def)):
         exit(1)
 
 def gen_build_def(commit):
@@ -77,15 +77,55 @@ def gen_build_def(commit):
     ]
     return ";".join(defs).replace('"', r'\"')
 
+
+from os import path
+def zip(zip_path, name):
+    _7z = path.join(path.dirname(path.realpath(__file__)), "7z")
+    zip_cmd = '{0} a {1} {2} > NUL'.format(_7z, name, path.join(path.abspath(zip_path), "*"))
+    if os.system(zip_cmd):
+        print 'failed to zip: '+zip_cmd
+        exit(1)
+
+def zip_release(arch, commit):
+
+    name = 'OBS-'+commit['committedVersionNumber']+'-'+commit['commitSHA1Abbrev']+'-'+arch+'.7z'
+    print "zipping "+name
+    if arch == 'x86':
+        zip('installer/32bit', name)
+    else:
+        zip('installer/64bit', name)
+
+def obs_pkg(commit):
+    import shutil
+    import glob
+    # clean installer dirs
+    shutil.rmtree('installer/32bit')
+    shutil.rmtree('installer/64bit')
+    # clean up archives
+    for f in glob.glob("*.7z"):
+        os.remove(f)
+
+    os.system("cd installer && generate_binaries_test")
+
+    zip_release('x86', commit)
+    zip_release('x64', commit)
+    f = open('archive.properties', 'w')
+    f.writelines(['{0}={1}\n'.format(k, v.replace('=',r'\=').replace(':', r'\:')) for k, v in commit.items()])
+    f.close()
+
 import argparse
 parser = argparse.ArgumentParser(description='ce.org builds xml gen')
 parser.add_argument('-b', '--branch', dest='branch', required=True)
+parser.add_argument('-p', '--package-only', dest='package_only', required=False, action='store_true', default=False)
 args = parser.parse_args()
 
-commit = gen_commit(args.branch);
-
+commit = gen_commit(args.branch)
 build_def = gen_build_def(commit)
 
-# obs_build('win32', build_def)
-obs_build('x64', build_def)
+if not args.package_only:
+    obs_build('win32', build_def)
+    obs_build('x64', build_def)
+
+obs_pkg(commit)
+
 
