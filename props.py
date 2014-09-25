@@ -30,3 +30,6 @@ def rev_dir(prop):
 
 def file_path(prop, arch):
     return prop['branch']+'/'+rev_dir(prop)+'/'+file_name(prop,arch)
+
+def archive_path(prop):
+    return prop['branch']+'/'+rev_dir(prop)+'/archive.properties'

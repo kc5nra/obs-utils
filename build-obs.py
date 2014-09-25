@@ -122,7 +122,7 @@ def obs_pkg(commit):
 
     zip_release('x86', commit)
     zip_release('x64', commit)
-    f = open('archive.properties', 'w')
+    f = open(props.archive_path(commit), 'w')
     f.writelines(['{0}={1}\n'.format(k, props.val_escape(v)) for k, v in commit.items()])
     f.close()
 
