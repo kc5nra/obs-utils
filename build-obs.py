@@ -1,6 +1,7 @@
 import subprocess
 import os
 import re
+import props
 
 def exec_cmd(*cmd):
     return subprocess.check_output(cmd)
@@ -56,14 +57,15 @@ def gen_commit(branch):
         'committer': committer
     }
 
-def obs_build(arch, build_def):
+def obs_build(arch, build_def, multi):
+    mt = '/m' if multi else ''
     build_cmd = [
-        'msbuild OBS-All.sln /m /t:Clean;Build',
+        'msbuild OBS-All.sln /t:Clean;Build',
         '/p:Configuration=Release;Platform={0}',
-        '/p:DynamicDefines="{1}"'
+        '/p:DynamicDefines="{1}" {2}'
     ]
 
-    if os.system(' '.join(build_cmd).format(arch, build_def)):
+    if os.system(' '.join(build_cmd).format(arch, build_def, mt)):
         exit(1)
 
 def gen_build_def(commit):
@@ -78,7 +80,15 @@ def gen_build_def(commit):
     return ";".join(defs).replace('"', r'\"')
 
 
-from os import path
+from os import path, errno
+
+def mkdir(dirname):
+    try:
+        os.makedirs(dirname)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
 def zip(zip_path, name):
     _7z = path.join(path.dirname(path.realpath(__file__)), "7z")
     zip_cmd = '{0} a {1} {2} > NUL'.format(_7z, name, path.join(path.abspath(zip_path), "*"))
@@ -88,7 +98,10 @@ def zip(zip_path, name):
 
 def zip_release(arch, commit):
 
-    name = 'OBS-'+commit['committedVersionNumber']+'-'+commit['commitSHA1Abbrev']+'-'+arch+'.7z'
+
+    name = path.join('archives', props.file_path(commit, arch))
+    mkdir(path.dirname(name))
+
     print "zipping "+name
     if arch == 'x86':
         zip('installer/32bit', name)
@@ -110,21 +123,22 @@ def obs_pkg(commit):
     zip_release('x86', commit)
     zip_release('x64', commit)
     f = open('archive.properties', 'w')
-    f.writelines(['{0}={1}\n'.format(k, v.replace('=',r'\=').replace(':', r'\:')) for k, v in commit.items()])
+    f.writelines(['{0}={1}\n'.format(k, props.val_escape(v)) for k, v in commit.items()])
     f.close()
 
 import argparse
 parser = argparse.ArgumentParser(description='ce.org builds xml gen')
 parser.add_argument('-b', '--branch', dest='branch', required=True)
 parser.add_argument('-p', '--package-only', dest='package_only', required=False, action='store_true', default=False)
+parser.add_argument('-m', '--multithreaded', dest='multi', required=False, action='store_true', default=False)
 args = parser.parse_args()
 
 commit = gen_commit(args.branch)
 build_def = gen_build_def(commit)
 
 if not args.package_only:
-    obs_build('win32', build_def)
-    obs_build('x64', build_def)
+    obs_build('win32', build_def, args.multi)
+    obs_build('x64', build_def, args.multi)
 
 obs_pkg(commit)
 
