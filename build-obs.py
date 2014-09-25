@@ -89,6 +89,11 @@ def mkdir(dirname):
         if e.errno != errno.EEXIST:
             raise
 
+def rmdir(dirname):
+    import shutil
+    if path.exists(dirname):
+        shutil.rmtree(dirname)
+
 def zip(zip_path, name):
     _7z = path.join(path.dirname(path.realpath(__file__)), "7z")
     zip_cmd = '{0} a {1} {2} > NUL'.format(_7z, name, path.join(path.abspath(zip_path), "*"))
@@ -97,8 +102,6 @@ def zip(zip_path, name):
         exit(1)
 
 def zip_release(arch, commit):
-
-
     name = path.join('archives', props.file_path(commit, arch))
     mkdir(path.dirname(name))
 
@@ -109,12 +112,11 @@ def zip_release(arch, commit):
         zip('installer/64bit', name)
 
 def obs_pkg(commit):
-    import shutil
     import glob
     # clean
-    shutil.rmtree('archives')
-    shutil.rmtree('installer/32bit')
-    shutil.rmtree('installer/64bit')
+    rmdir('archives')
+    rmdir('installer/32bit')
+    rmdir('installer/64bit')
     # clean up archives
     for f in glob.glob("*.7z"):
         os.remove(f)
