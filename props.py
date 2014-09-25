@@ -1,3 +1,5 @@
+from os import path
+
 def val_unescape(propval):
     return propval.replace(r'\:', ':').replace(r'\=', '=')
 
@@ -29,7 +31,7 @@ def rev_dir(prop):
     return prop['commitCount']+'-'+prop['committedVersionNumber']
 
 def file_path(prop, arch):
-    return prop['branch']+'/'+rev_dir(prop)+'/'+file_name(prop,arch)
+    return path.join(prop['branch'], rev_dir(prop), file_name(prop,arch))
 
 def archive_path(prop):
-    return prop['branch']+'/'+rev_dir(prop)+'/archive.properties'
+    return path.join(prop['branch'],rev_dir(prop), 'archive.properties')
