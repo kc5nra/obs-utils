@@ -47,7 +47,7 @@ def gen_xml(root_dir, out):
     with open(out, 'w') as output:
         output.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?>')
         output.write('<?xml-stylesheet type="text/xsl" href="assets/obsbuilds.xsl"?>')
-        ET.ElementTree(branches_ele).write(output, xml_declaration=False, encoding='utf-8')
+        ET.ElementTree(branches_ele).write(output, encoding='utf-8')
 
 
 import argparse
