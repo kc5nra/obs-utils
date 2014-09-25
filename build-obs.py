@@ -111,7 +111,8 @@ def zip_release(arch, commit):
 def obs_pkg(commit):
     import shutil
     import glob
-    # clean installer dirs
+    # clean
+    shutil.rmtree('archives')
     shutil.rmtree('installer/32bit')
     shutil.rmtree('installer/64bit')
     # clean up archives
