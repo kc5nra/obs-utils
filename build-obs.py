@@ -65,7 +65,7 @@ def obs_build(arch, build_def, multi):
         '/p:DynamicDefines="{1}" {2}'
     ]
 
-    if os.system(' '.join(build_cmd).format(arch, build_def, mt)):
+    if os.system(build_cmd.format(arch, build_def, mt)):
         exit(1)
 
 def gen_build_def(commit):
