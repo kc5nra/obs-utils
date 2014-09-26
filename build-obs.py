@@ -59,11 +59,11 @@ def gen_commit(branch):
 
 def obs_build(arch, build_def, multi):
     mt = '/m' if multi else ''
-    build_cmd = [
-        'msbuild OBS-All.sln /t:Clean;Build',
-        '/p:Configuration=Release;Platform={0}',
+    build_cmd = 
+        'msbuild OBS-All.sln /t:Clean;Build' \
+        '/p:Configuration=Release;Platform={0}' \
         '/p:DynamicDefines="{1}" {2}'
-    ]
+    
 
     if os.system(build_cmd.format(arch, build_def, mt)):
         exit(1)
